@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 0 0% 26%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 26%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 26%;
+
+    --primary: 350 94% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 197 91% 51%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 166 28% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 166 28% 48%;
+    --success-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 18% 90%;
+    --input: 210 18% 90%;
+    --ring: 350 94% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 26%;
+    --sidebar-primary: 350 94% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 0 0% 26%;
+    --sidebar-border: 210 18% 90%;
+    --sidebar-ring: 350 94% 55%;
+
+    /* Custom tokens */
+    --pharma-red: 350 94% 55%;
+    --pharma-blue: 197 91% 51%;
+    --pharma-teal: 166 28% 48%;
+    --pharma-grey: 0 0% 26%;
+    --pharma-light-grey: 0 0% 60%;
+    --pharma-surface: 210 25% 97%;
+
+    --shadow-glossy: 0 1px 2px hsl(0 0% 0% / 0.03), 0 8px 24px hsl(0 0% 0% / 0.04), inset 0 1px 0 hsl(0 0% 100% / 0.8);
+    --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.04), 0 4px 12px hsl(0 0% 0% / 0.03), inset 0 1px 0 hsl(0 0% 100% / 0.6);
+
+    --table-header: 0 0% 26%;
+    --table-header-foreground: 0 0% 100%;
+    --table-row-even: 210 20% 98%;
+    --table-row-odd: 0 0% 100%;
+    --table-border: 210 18% 90%;
+
+    --status-pending: 40 95% 55%;
+    --status-pending-today: 48 100% 55%;
+    --status-pending-old: 30 95% 50%;
+    --status-completed: 166 28% 48%;
+    --status-cancelled: 350 94% 55%;
+
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass-surface {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    box-shadow: 
+      0 1px 3px hsl(0 0% 0% / 0.04),
+      0 4px 12px hsl(0 0% 0% / 0.03),
+      inset 0 1px 0 hsl(0 0% 100% / 0.6);
+  }
+
+  .glass-card {
+    @apply bg-card backdrop-blur-xl border border-border/40 rounded-xl;
+    box-shadow: 
+      0 1px 2px hsl(0 0% 0% / 0.03),
+      0 8px 24px hsl(0 0% 0% / 0.04),
+      inset 0 1px 0 hsl(0 0% 100% / 0.8);
+  }
+
+  .glossy-button {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 1) 0%,
+      hsl(var(--primary) / 0.85) 100%
+    );
+    box-shadow:
+      0 1px 2px hsl(0 0% 0% / 0.1),
+      0 4px 12px hsl(var(--primary) / 0.3),
+      inset 0 1px 0 hsl(0 0% 100% / 0.2);
+  }
+
+  .glossy-button:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.95) 0%,
+      hsl(var(--primary) / 0.8) 100%
+    );
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+  .table-row-hover:hover {
+    background: hsl(var(--pharma-blue) / 0.04);
+  }
+}
