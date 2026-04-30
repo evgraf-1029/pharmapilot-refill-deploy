@@ -1,3 +1,5 @@
+// PharmaPilot v1.0 - safetydrugs route
+
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
