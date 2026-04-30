@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/safetydrugs/(.*)", "destination": "/index.html" },
-    { "source": "/safetydrugs", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
