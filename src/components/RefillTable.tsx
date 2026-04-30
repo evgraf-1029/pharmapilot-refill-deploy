@@ -19,7 +19,15 @@ import {
 } from "@/components/ui/select";
 import { User, Hash, Phone, Pill, Package, FileText, Activity, Calendar } from "lucide-react";
 
-const STATUSES: RefillStatus[] = ["Pending", "In Progress", "Completed", "Cancelled"];
+const STATUSES: RefillStatus[] = ["pending", "processing", "ready", "completed", "cancelled"];
+
+const STATUS_LABELS: Record<RefillStatus, string> = {
+  pending:    "Pending",
+  processing: "In Progress",
+  ready:      "Ready",
+  completed:  "Completed",
+  cancelled:  "Cancelled",
+};
 
 const columnDefs = [
   { label: "Patient's Name", icon: User },
@@ -103,7 +111,7 @@ const RefillTable = ({ records, onStatusChange }: RefillTableProps) => {
                       <SelectContent>
                         {STATUSES.map((s) => (
                           <SelectItem key={s} value={s} className="text-xs">
-                            {s}
+                            {STATUS_LABELS[s]}
                           </SelectItem>
                         ))}
                       </SelectContent>
