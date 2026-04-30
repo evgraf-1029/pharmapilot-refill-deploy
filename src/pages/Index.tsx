@@ -19,12 +19,9 @@ const Index = () => {
   // ====================== Fetch Records from API Gateway ======================
   const fetchRecords = useCallback(async () => {
     try {
+      // No headers on GET — avoids CORS preflight issues
       const response = await fetch(
-        `${API_BASE_URL}/refills?pharmacyId=${PHARMACY_ID}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
+        `${API_BASE_URL}/refills?pharmacyId=${PHARMACY_ID}`
       );
 
       if (!response.ok) {
