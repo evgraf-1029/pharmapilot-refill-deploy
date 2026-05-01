@@ -1,8 +1,7 @@
 // PharmaPilot v1.0 - safetydrugs route
-
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,11 +19,9 @@ const AuthGate = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session ? "authenticated" : "unauthenticated");
     });
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session ? "authenticated" : "unauthenticated");
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -41,12 +38,11 @@ const AuthGate = () => {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Navigate to="/safetydrugs" replace />} />
+      <Route path="/safetydrugs" element={<Index />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
@@ -55,7 +51,9 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthGate />
+      <BrowserRouter>
+        <AuthGate />
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
