@@ -52,6 +52,7 @@ const Index = () => {
       }));
 
       setRecords(mapped);
+      console.log("Records set:", mapped.length, mapped[0]?.id);
     } catch (err) {
       console.error("Error fetching records:", err);
     }
@@ -71,6 +72,7 @@ const Index = () => {
   // ====================== Update Status via API Gateway ======================
   const handleStatusChange = async (id: string, newStatus: RefillStatus) => {
     // Find the record to get its receivedAt (sort key — required by Lambda3)
+    console.log("Status change called - id:", id, "records count:", records.length, "all ids:", records.map(r => r.id));
     const record = records.find((r) => r.id === id);
     if (!record) {
       toast({ title: "Error", description: "Record not found.", variant: "destructive" });
