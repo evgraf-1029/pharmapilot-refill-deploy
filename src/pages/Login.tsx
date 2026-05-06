@@ -1,110 +1,220 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, LogIn } from "lucide-react";
-import pharmaLogo from "@/assets/pharma-pilot-logo-clean.png";
+import { signIn, confirmSignIn } from "aws-amplify/auth";
 
-const Login = () => {
+interface LoginProps {
+  onLogin: () => void;
+}
+
+const Login = ({ onLogin }: LoginProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [needsNewPassword, setNeedsNewPassword] = useState(false);
+  const [signInResult, setSignInResult] = useState<any>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await signIn({ username, password });
+
+      // Check if user needs to set a new password (first login)
+      if (result.nextStep?.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
+        setSignInResult(result);
+        setNeedsNewPassword(true);
+        setLoading(false);
+        return;
+      }
+
+      if (result.isSignedIn) {
+        onLogin();
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      if (err.name === "NotAuthorizedException") {
+        setError("Incorrect username or password.");
+      } else if (err.name === "UserNotFoundException") {
+        setError("User not found.");
+      } else if (err.name === "UserNotConfirmedException") {
+        setError("Account not confirmed. Please contact your administrator.");
+      } else {
+        setError(err.message || "Login failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!username.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
 
     setLoading(true);
+
     try {
-      // Accept either a full email address or a legacy username (which gets the @pharmapilot.local suffix)
-      const trimmed = username.trim();
-      const email = trimmed.includes("@") ? trimmed : `${trimmed}@pharmapilot.local`;
-
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        setError("Invalid login or password");
+      const result = await confirmSignIn({ challengeResponse: newPassword });
+      if (result.isSignedIn) {
+        onLogin();
       }
-    } catch {
-      setError("Server error. Try again later.");
+    } catch (err: any) {
+      console.error("New password error:", err);
+      setError(err.message || "Failed to set new password.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm glass-surface rounded-2xl p-8 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
+      <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-2xl shadow-lg border border-border">
+
+        {/* Logo + Title */}
         <div className="flex flex-col items-center gap-3">
-          <img src={pharmaLogo} alt="PharmaPilot Logo" className="h-16 w-16 object-contain" />
+          <img
+            src="/pharma-pilot-logo-clean.png"
+            alt="PharmaPilot"
+            className="w-16 h-16 rounded-full object-cover"
+          />
           <div className="text-center">
-            <h1 className="text-lg font-bold tracking-tight text-foreground font-display">
-              PharmaPilot
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Medigroup Refill Dashboard
-            </p>
+            <h1 className="text-2xl font-bold text-foreground">PharmaPilot</h1>
+            <p className="text-sm text-muted-foreground">Medigroup Refill Dashboard</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="login-user">Email or Username</Label>
-            <Input
-              id="login-user"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter email or username"
-              disabled={loading}
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground">
-              If you changed your email, keep using your current login until you confirm the email link.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="login-pass">Password</Label>
-            <Input
-              id="login-pass"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              disabled={loading}
-            />
-          </div>
+        {!needsNewPassword ? (
+          /* ===== NORMAL LOGIN FORM ===== */
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">
+                Username or Email
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                required
+                autoComplete="username"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+                           transition-all"
+              />
+            </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+                           transition-all"
+              />
+            </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <LogIn className="mr-2 h-4 w-4" />
-                Sign In
-              </>
+            {error && (
+              <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {error}
+              </div>
             )}
-          </Button>
-        </form>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-lg bg-primary text-primary-foreground
+                         font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-all focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+        ) : (
+          /* ===== NEW PASSWORD FORM (first login) ===== */
+          <form onSubmit={handleNewPassword} className="space-y-4">
+            <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+              Welcome! Please set a new password for your account.
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+                autoComplete="new-password"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+                           transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+                autoComplete="new-password"
+                className="w-full px-4 py-2.5 rounded-lg border border-input bg-background
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent
+                           transition-all"
+              />
+            </div>
+
+            {error && (
+              <div className="px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-lg bg-primary text-primary-foreground
+                         font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-all focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {loading ? "Setting password..." : "Set Password & Sign In"}
+            </button>
+          </form>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          PharmaPilot · Medigroup · {new Date().getFullYear()}
+        </p>
       </div>
     </div>
   );

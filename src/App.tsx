@@ -1,29 +1,42 @@
-// PharmaPilot v1.0 - safetydrugs route
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser, signOut } from "aws-amplify/auth";
+import { Amplify } from "aws-amplify";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
+// Configure Amplify with Cognito
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+      userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
+    }
+  }
+});
+
 const queryClient = new QueryClient();
 
 const AuthGate = () => {
-  const [session, setSession] = useState<null | "loading" | "authenticated" | "unauthenticated">("loading");
+  const [session, setSession] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session ? "authenticated" : "unauthenticated");
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session ? "authenticated" : "unauthenticated");
-    });
-    return () => subscription.unsubscribe();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      await getCurrentUser();
+      setSession("authenticated");
+    } catch {
+      setSession("unauthenticated");
+    }
+  };
 
   if (session === "loading") {
     return (
@@ -34,7 +47,7 @@ const AuthGate = () => {
   }
 
   if (session === "unauthenticated") {
-    return <Login />;
+    return <Login onLogin={() => setSession("authenticated")} />;
   }
 
   return (
