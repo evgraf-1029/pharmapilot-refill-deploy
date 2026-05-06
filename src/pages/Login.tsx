@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { signIn, confirmSignIn } from "aws-amplify/auth";
+import pharmaPilotLogo from "@/assets/pharma-pilot-logo-clean.png";
 
 interface LoginProps {
   onLogin: () => void;
@@ -13,7 +14,6 @@ const Login = ({ onLogin }: LoginProps) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [needsNewPassword, setNeedsNewPassword] = useState(false);
-  const [signInResult, setSignInResult] = useState<any>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +23,7 @@ const Login = ({ onLogin }: LoginProps) => {
     try {
       const result = await signIn({ username, password });
 
-      // Check if user needs to set a new password (first login)
       if (result.nextStep?.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
-        setSignInResult(result);
         setNeedsNewPassword(true);
         setLoading(false);
         return;
@@ -86,9 +84,9 @@ const Login = ({ onLogin }: LoginProps) => {
         {/* Logo + Title */}
         <div className="flex flex-col items-center gap-3">
           <img
-            src="/pharma-pilot-logo-clean.png"
+            src={pharmaPilotLogo}
             alt="PharmaPilot"
-            className="w-16 h-16 rounded-full object-cover"
+            className="w-20 h-20 rounded-full object-cover"
           />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">PharmaPilot</h1>
