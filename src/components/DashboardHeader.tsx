@@ -5,7 +5,7 @@ import { LogOut, RefreshCw, Download } from "lucide-react";
 import pharmaPilotLogo from "@/assets/pharma-pilot-logo-clean.png";
 
 // API Gateway URL for the call log Excel generator
-const CALL_LOG_API_URL = "https://hrcw9fqsa2.execute-api.ca-central-1.amazonaws.com/prod";
+const CALL_LOG_API_URL = "https://hrcw9fqsa2.execute-api.ca-central-1.amazonaws.com/prod/logs";
 
 const DashboardHeader = () => {
   const { toast } = useToast();
