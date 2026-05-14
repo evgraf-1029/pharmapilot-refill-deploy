@@ -6,43 +6,56 @@ interface DashboardStatsProps {
 }
 
 const DashboardStats = ({ records }: DashboardStatsProps) => {
-  const total = records.length;
-  const pending = records.filter((r) => r.status === "Pending").length;
-  const completed = records.filter((r) => r.status === "Completed").length;
-  const cancelled = records.filter((r) => r.status === "Cancelled").length;
+  // Derive all counts directly from the live records array
+  const total     = records.length;
+  const pending   = records.filter((r) => r.status === "pending").length;
+  const completed = records.filter((r) => r.status === "completed").length;
+  const cancelled = records.filter((r) => r.status === "cancelled").length;
 
   const stats = [
-    { label: "Total Requests", value: total, icon: ClipboardList, color: "secondary" },
-    { label: "Pending", value: pending, icon: Clock, color: "pending" },
-    { label: "Completed", value: completed, icon: CheckCircle, color: "accent" },
-    { label: "Cancelled", value: cancelled, icon: XCircle, color: "primary" },
+    {
+      label: "Total Requests",
+      value: total,
+      icon: ClipboardList,
+      iconClass: "text-blue-500",
+      bgClass: "bg-blue-50 dark:bg-blue-950/30",
+    },
+    {
+      label: "Pending",
+      value: pending,
+      icon: Clock,
+      iconClass: "text-yellow-500",
+      bgClass: "bg-yellow-50 dark:bg-yellow-950/30",
+    },
+    {
+      label: "Completed",
+      value: completed,
+      icon: CheckCircle,
+      iconClass: "text-green-500",
+      bgClass: "bg-green-50 dark:bg-green-950/30",
+    },
+    {
+      label: "Cancelled",
+      value: cancelled,
+      icon: XCircle,
+      iconClass: "text-red-500",
+      bgClass: "bg-red-50 dark:bg-red-950/30",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-      {stats.map((stat) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {stats.map(({ label, value, icon: Icon, iconClass, bgClass }) => (
         <div
-          key={stat.label}
-          className="glass-card p-6 transition-all hover:scale-105"
+          key={label}
+          className="rounded-xl border border-border bg-card p-4 flex items-center gap-4 shadow-sm"
         >
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-foreground">{stat.value}</h3>
-            </div>
-            <div className={`p-3 rounded-lg ${
-              stat.color === "secondary" ? "bg-secondary/10" :
-              stat.color === "pending" ? "bg-[hsl(var(--status-pending))]/10" :
-              stat.color === "accent" ? "bg-accent/10" :
-              "bg-primary/10"
-            }`}>
-              <stat.icon className={`w-6 h-6 ${
-                stat.color === "secondary" ? "text-secondary" :
-                stat.color === "pending" ? "text-[hsl(var(--status-pending))]" :
-                stat.color === "accent" ? "text-accent" :
-                "text-primary"
-              }`} />
-            </div>
+          <div className={`rounded-lg p-2.5 ${bgClass}`}>
+            <Icon size={22} className={iconClass} />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="text-2xl font-bold text-foreground">{value}</p>
           </div>
         </div>
       ))}
