@@ -1,20 +1,21 @@
 import { RefillRecord } from "@/types/refill";
-import { ClipboardList, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ClipboardList, Clock, Loader2, PackageCheck, CheckCircle, XCircle } from "lucide-react";
 
 interface DashboardStatsProps {
   records: RefillRecord[];
 }
 
 const DashboardStats = ({ records }: DashboardStatsProps) => {
-  // Derive all counts directly from the live records array
-  const total     = records.length;
-  const pending   = records.filter((r) => r.status === "pending").length;
-  const completed = records.filter((r) => r.status === "completed").length;
-  const cancelled = records.filter((r) => r.status === "cancelled").length;
+  const total      = records.length;
+  const pending    = records.filter((r) => r.status === "pending").length;
+  const inProgress = records.filter((r) => r.status === "processing").length;
+  const ready      = records.filter((r) => r.status === "ready").length;
+  const completed  = records.filter((r) => r.status === "completed").length;
+  const cancelled  = records.filter((r) => r.status === "cancelled").length;
 
   const stats = [
     {
-      label: "Total Requests",
+      label: "Total",
       value: total,
       icon: ClipboardList,
       iconClass: "text-blue-500",
@@ -26,6 +27,20 @@ const DashboardStats = ({ records }: DashboardStatsProps) => {
       icon: Clock,
       iconClass: "text-yellow-500",
       bgClass: "bg-yellow-50 dark:bg-yellow-950/30",
+    },
+    {
+      label: "In Progress",
+      value: inProgress,
+      icon: Loader2,
+      iconClass: "text-orange-500",
+      bgClass: "bg-orange-50 dark:bg-orange-950/30",
+    },
+    {
+      label: "Ready",
+      value: ready,
+      icon: PackageCheck,
+      iconClass: "text-teal-500",
+      bgClass: "bg-teal-50 dark:bg-teal-950/30",
     },
     {
       label: "Completed",
@@ -44,18 +59,18 @@ const DashboardStats = ({ records }: DashboardStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
       {stats.map(({ label, value, icon: Icon, iconClass, bgClass }) => (
         <div
           key={label}
-          className="rounded-xl border border-border bg-card p-4 flex items-center gap-4 shadow-sm"
+          className="rounded-xl border border-border bg-card p-3 flex items-center gap-3 shadow-sm"
         >
-          <div className={`rounded-lg p-2.5 ${bgClass}`}>
-            <Icon size={22} className={iconClass} />
+          <div className={`rounded-lg p-2 shrink-0 ${bgClass}`}>
+            <Icon size={18} className={iconClass} />
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground truncate">{label}</p>
+            <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
           </div>
         </div>
       ))}
