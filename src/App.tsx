@@ -1,3 +1,4 @@
+// PharmaPilot v1.1 - Cognito Auth
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
@@ -9,6 +10,7 @@ import { Amplify } from "aws-amplify";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CallBackDash from "./pages/CallBackDash.tsx";
 
 // Configure Amplify with Cognito
 Amplify.configure({
@@ -54,6 +56,7 @@ const AuthGate = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/safetydrugs" replace />} />
       <Route path="/safetydrugs" element={<Index />} />
+      <Route path="/safetydrugs/callbacks" element={<CallBackDash />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { signOut } from "aws-amplify/auth";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, RefreshCw, Download } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { LogOut, RefreshCw, Download, Pill, PhoneCall } from "lucide-react";
 import pharmaPilotLogo from "@/assets/pharma-pilot-logo-clean.png";
 
-// API Gateway URL for the call log Excel generator
 const CALL_LOG_API_URL = "https://hrcw9fqsa2.execute-api.ca-central-1.amazonaws.com/prod/logs";
 
 const DashboardHeader = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [downloading, setDownloading] = useState(false);
+
+  const isCallbacks = location.pathname === "/safetydrugs/callbacks";
 
   const handleLogout = async () => {
     try {
@@ -39,24 +43,15 @@ const DashboardHeader = () => {
         body: JSON.stringify({}),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
       const data = await response.json();
-
-      // Lambda returns body as a JSON string in some API Gateway configs
       const body = typeof data.body === 'string' ? JSON.parse(data.body) : data;
-
       const downloadUrl = body.download_url || data.download_url;
 
-      if (!downloadUrl) {
-        throw new Error('No download URL returned from server');
-      }
+      if (!downloadUrl) throw new Error('No download URL returned from server');
 
-      // Open the presigned S3 URL to trigger download
       window.open(downloadUrl, '_blank');
-
       toast({
         title: "Report ready!",
         description: `${body.total_rows || ''} call records exported. Download starting...`,
@@ -78,20 +73,48 @@ const DashboardHeader = () => {
     <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
       <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
 
-        {/* Logo + Title */}
-        <div className="flex items-center gap-3">
-          <img
-            src={pharmaPilotLogo}
-            alt="PharmaPilot"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          <div>
-            <h1 className="text-base font-bold text-foreground leading-tight">PharmaPilot</h1>
-            <p className="text-xs text-muted-foreground leading-tight">Medigroup Refill Dashboard</p>
+        {/* Left: Logo + Nav tabs */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <img
+              src={pharmaPilotLogo}
+              alt="PharmaPilot"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-base font-bold text-foreground leading-tight">PharmaPilot</h1>
+              <p className="text-xs text-muted-foreground leading-tight">Medigroup Dashboard</p>
+            </div>
           </div>
+
+          {/* Nav tabs */}
+          <nav className="flex items-center gap-1 ml-2">
+            <button
+              onClick={() => navigate("/safetydrugs")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                !isCallbacks
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "border border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Pill size={14} />
+              Refills
+            </button>
+            <button
+              onClick={() => navigate("/safetydrugs/callbacks")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                isCallbacks
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "border border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <PhoneCall size={14} />
+              Call Backs
+            </button>
+          </nav>
         </div>
 
-        {/* Actions */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2">
           <button
             onClick={handleCallLogDownload}
