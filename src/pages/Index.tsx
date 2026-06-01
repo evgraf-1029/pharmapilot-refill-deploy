@@ -4,6 +4,7 @@ import DashboardStats from "@/components/DashboardStats";
 import RefillTable from "@/components/RefillTable";
 import { RefillRecord, RefillStatus } from "@/types/refill";
 import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // ===================================================================
 // API GATEWAY CONFIGURATION
@@ -11,15 +12,16 @@ import { useToast } from "@/hooks/use-toast";
 const API_BASE_URL = "https://0nr1n0bwvc.execute-api.ca-central-1.amazonaws.com";
 const PHARMACY_ID = "PHARMACY_001";
 const POLL_INTERVAL_MS = 10000; // 10 seconds
+const PAGE_SIZE = 100;
 
 const Index = () => {
   const [records, setRecords] = useState<RefillRecord[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   // ====================== Fetch Records from API Gateway ======================
   const fetchRecords = useCallback(async () => {
     try {
-      // No headers on GET — avoids CORS preflight issues
       const response = await fetch(
         `${API_BASE_URL}/refills?pharmacyId=${PHARMACY_ID}`
       );
@@ -47,7 +49,7 @@ const Index = () => {
         rxNote:         r.rxNote || "",
         status:         r.status as RefillStatus,
         createdAt:      r.createdAt,
-        receivedAt:     r.receivedAt,   // Sort key — needed for status updates
+        receivedAt:     r.receivedAt,
         pharmacyId:     r.pharmacyId,
       }));
 
@@ -58,21 +60,15 @@ const Index = () => {
     }
   }, []);
 
-  // ====================== Polling — fetch every 10 seconds ======================
+  // ====================== Polling ======================
   useEffect(() => {
-    fetchRecords(); // Fetch immediately on load
-
-    const interval = setInterval(() => {
-      fetchRecords();
-    }, POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval); // Cleanup on unmount
+    fetchRecords();
+    const interval = setInterval(fetchRecords, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, [fetchRecords]);
 
-  // ====================== Update Status via API Gateway ======================
+  // ====================== Update Status ======================
   const handleStatusChange = async (id: string, newStatus: RefillStatus) => {
-    // Find the record to get its receivedAt (sort key — required by Lambda3)
-    console.log("Status change called - id:", id, "records count:", records.length, "all ids:", records.map(r => r.id));
     const record = records.find((r) => r.id === id);
     if (!record) {
       toast({ title: "Error", description: "Record not found.", variant: "destructive" });
@@ -85,27 +81,20 @@ const Index = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pharmacyId: record.pharmacyId || PHARMACY_ID,
-          receivedAt: record.receivedAt,   // Sort key
+          receivedAt: record.receivedAt,
           id:         record.id,
           status:     newStatus,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
       const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Unknown error");
 
-      if (!data.success) {
-        throw new Error(data.error || "Unknown error");
-      }
-
-      // Optimistically update UI without waiting for next poll
       setRecords((prev) =>
         prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
       );
-
     } catch (err) {
       console.error("Error updating status:", err);
       toast({
@@ -116,6 +105,17 @@ const Index = () => {
     }
   };
 
+  // ====================== Pagination ======================
+  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+
+  // Clamp currentPage if records shrink
+  const safePage = Math.min(currentPage, totalPages);
+  const pageRecords = records.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col">
       <DashboardHeader />
@@ -124,11 +124,47 @@ const Index = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Refill Requests</h2>
-            <span className="text-xs text-muted-foreground">
-              {records.length} record{records.length !== 1 ? "s" : ""}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">
+                {records.length} record{records.length !== 1 ? "s" : ""}
+                {totalPages > 1 && ` · Page ${safePage} of ${totalPages}`}
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => goToPage(safePage - 1)}
+                    disabled={safePage === 1}
+                    className="p-1 rounded border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`px-2 py-0.5 rounded text-xs border transition-colors ${
+                        page === safePage
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => goToPage(safePage + 1)}
+                    disabled={safePage === totalPages}
+                    className="p-1 rounded border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Next page"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <RefillTable records={records} onStatusChange={handleStatusChange} />
+          <RefillTable records={pageRecords} onStatusChange={handleStatusChange} />
         </div>
       </main>
       <footer className="border-t border-border px-6 py-3 text-center text-xs text-muted-foreground">
