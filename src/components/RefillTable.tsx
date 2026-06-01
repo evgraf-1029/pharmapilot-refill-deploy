@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Hash, Phone, Pill, Package, FileText, Activity, Calendar } from "lucide-react";
+import { User, Hash, Phone, Pill, Package, Activity, Calendar } from "lucide-react";
 
 const STATUSES: RefillStatus[] = ["pending", "processing", "ready", "completed", "cancelled"];
 
@@ -36,7 +36,6 @@ const columnDefs = [
   { label: "RX", icon: Hash },
   { label: "Medication", icon: Pill },
   { label: "QTY", icon: Package },
-  { label: "NOTE", icon: FileText },
   { label: "Status", icon: Activity },
   { label: "Received At", icon: Calendar },
 ];
@@ -68,7 +67,7 @@ const RefillTable = ({ records, onStatusChange }: RefillTableProps) => {
           <TableBody>
             {records.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                   No refill requests yet. Waiting for AI agent submissions…
                 </TableCell>
               </TableRow>
@@ -92,9 +91,6 @@ const RefillTable = ({ records, onStatusChange }: RefillTableProps) => {
                 </TableCell>
                 <TableCell className="px-4 py-3.5 text-center">
                   <ExpandableCell className="tabular-nums">{record.rxQty}</ExpandableCell>
-                </TableCell>
-                <TableCell className="px-4 py-3.5 max-w-[200px]">
-                  <ExpandableCell className="text-muted-foreground">{record.rxNote || <span className="text-muted-foreground/40">—</span>}</ExpandableCell>
                 </TableCell>
                 <TableCell className="px-4 py-3.5">
                   {editingId === record.id ? (
