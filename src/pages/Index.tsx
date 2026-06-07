@@ -10,33 +10,25 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // API GATEWAY CONFIGURATION
 // ===================================================================
 const API_BASE_URL = "https://0nr1n0bwvc.execute-api.ca-central-1.amazonaws.com";
-const PHARMACY_ID = "PHARMACY_001";
-const POLL_INTERVAL_MS = 10000; // 10 seconds
+const PHARMACY_ID  = "PHARMACY_001";
+const POLL_INTERVAL_MS = 10000;
 const PAGE_SIZE = 100;
 
 const Index = () => {
-  const [records, setRecords] = useState<RefillRecord[]>([]);
+  const [records,     setRecords]     = useState<RefillRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
-  // ====================== Fetch Records from API Gateway ======================
+  // ====================== Fetch Records ======================
   const fetchRecords = useCallback(async () => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/refills?pharmacyId=${PHARMACY_ID}`
       );
-
-      if (!response.ok) {
-        console.error("Failed to fetch records:", response.status);
-        return;
-      }
+      if (!response.ok) { console.error("Failed to fetch:", response.status); return; }
 
       const data = await response.json();
-
-      if (!data.success) {
-        console.error("API error:", data.error);
-        return;
-      }
+      if (!data.success) { console.error("API error:", data.error); return; }
 
       const mapped: RefillRecord[] = (data.records || []).map((r: any) => ({
         id:             r.id,
@@ -54,7 +46,6 @@ const Index = () => {
       }));
 
       setRecords(mapped);
-      console.log("Records set:", mapped.length, mapped[0]?.id);
     } catch (err) {
       console.error("Error fetching records:", err);
     }
@@ -74,10 +65,9 @@ const Index = () => {
       toast({ title: "Error", description: "Record not found.", variant: "destructive" });
       return;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/refills/status`, {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pharmacyId: record.pharmacyId || PHARMACY_ID,
@@ -86,9 +76,7 @@ const Index = () => {
           status:     newStatus,
         }),
       });
-
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-
       const data = await response.json();
       if (!data.success) throw new Error(data.error || "Unknown error");
 
@@ -105,16 +93,51 @@ const Index = () => {
     }
   };
 
-  // ====================== Pagination ======================
-  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+  // ====================== Update Note ======================
+  const handleNoteChange = async (id: string, newNote: string) => {
+    const record = records.find((r) => r.id === id);
+    if (!record) {
+      toast({ title: "Error", description: "Record not found.", variant: "destructive" });
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/refills/note`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pharmacyId: record.pharmacyId || PHARMACY_ID,
+          receivedAt: record.receivedAt,
+          id:         record.id,
+          rxNote:     newNote,
+        }),
+      });
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Unknown error");
 
-  // Clamp currentPage if records shrink
-  const safePage = Math.min(currentPage, totalPages);
+      // Optimistic update
+      setRecords((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, rxNote: newNote } : r))
+      );
+
+      toast({ title: "Note saved", description: "Your note has been saved." });
+    } catch (err) {
+      console.error("Error updating note:", err);
+      toast({
+        title: "Error",
+        description: "Failed to save note. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // ====================== Pagination ======================
+  const totalPages  = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+  const safePage    = Math.min(currentPage, totalPages);
   const pageRecords = records.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  const goToPage = (page: number) => {
+  const goToPage = (page: number) =>
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col">
@@ -134,7 +157,8 @@ const Index = () => {
                   <button
                     onClick={() => goToPage(safePage - 1)}
                     disabled={safePage === 1}
-                    className="p-1 rounded border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded border border-border hover:bg-muted
+                               disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     title="Previous page"
                   >
                     <ChevronLeft size={14} />
@@ -155,7 +179,8 @@ const Index = () => {
                   <button
                     onClick={() => goToPage(safePage + 1)}
                     disabled={safePage === totalPages}
-                    className="p-1 rounded border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded border border-border hover:bg-muted
+                               disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     title="Next page"
                   >
                     <ChevronRight size={14} />
@@ -164,7 +189,11 @@ const Index = () => {
               )}
             </div>
           </div>
-          <RefillTable records={pageRecords} onStatusChange={handleStatusChange} />
+          <RefillTable
+            records={pageRecords}
+            onStatusChange={handleStatusChange}
+            onNoteChange={handleNoteChange}
+          />
         </div>
       </main>
       <footer className="border-t border-border px-6 py-3 text-center text-xs text-muted-foreground">
