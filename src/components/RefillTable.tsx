@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Hash, Phone, Pill, Package, FileText, Activity, Calendar, Check, X } from "lucide-react";
+import { User, Hash, Phone, Pill, Package, FileText, Activity, Calendar, Check, X, Pencil } from "lucide-react";
 
 const STATUSES: RefillStatus[] = ["pending", "processing", "ready", "completed", "cancelled"];
 
@@ -81,6 +81,9 @@ const RefillTable = ({ records, onStatusChange, onNoteChange }: RefillTableProps
                   <div className="flex items-center gap-1.5">
                     <Icon size={14} className="text-secondary" />
                     {label}
+                    {label === "Notes" && (
+                      <Pencil size={11} className="text-muted-foreground/60" />
+                    )}
                   </div>
                 </TableHead>
               ))}
