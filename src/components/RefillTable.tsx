@@ -80,10 +80,7 @@ const RefillTable = ({ records, onStatusChange, onNoteChange }: RefillTableProps
                 >
                   <div className="flex items-center gap-1.5">
                     <Icon size={14} className="text-secondary" />
-                    {label}
-                    {label === "Notes" && (
-                      <Pencil size={11} className="text-muted-foreground/60" />
-                    )}
+                    {label !== "Notes" && label}
                   </div>
                 </TableHead>
               ))}
@@ -180,13 +177,19 @@ const RefillTable = ({ records, onStatusChange, onNoteChange }: RefillTableProps
                       onClick={() => startEditNote(record.id, record.rxNote)}
                       className="cursor-pointer min-h-[28px] px-1.5 py-1 rounded
                                  hover:bg-muted transition-colors text-xs text-muted-foreground
-                                 group relative"
+                                 group relative flex items-center gap-1.5"
                       title="Click to edit note"
                     >
                       {record.rxNote ? (
-                        <span className="text-foreground">{record.rxNote}</span>
+                        <>
+                          <span className="text-foreground flex-1">{record.rxNote}</span>
+                          <Pencil size={11} className="text-muted-foreground/50 shrink-0" />
+                        </>
                       ) : (
-                        <span className="text-muted-foreground/40 italic">Add note…</span>
+                        <>
+                          <span className="text-muted-foreground/40 italic flex-1">Add note…</span>
+                          <Pencil size={11} className="text-muted-foreground/30 shrink-0" />
+                        </>
                       )}
                     </div>
                   )}
