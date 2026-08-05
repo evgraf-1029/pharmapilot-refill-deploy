@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/portage/:path*", "destination": "https://portage-dash.vercel.app/portage/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
