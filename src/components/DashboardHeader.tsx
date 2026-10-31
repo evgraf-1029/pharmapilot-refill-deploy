@@ -48,7 +48,14 @@ const DashboardHeader = () => {
 
       if (!downloadUrl) throw new Error('No download URL returned from server');
 
-      window.open(downloadUrl, '_blank');
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+
       toast({
         title: "Report ready!",
         description: `${body.total_rows || ''} call records exported. Download starting...`,
