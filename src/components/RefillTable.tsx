@@ -230,6 +230,7 @@ const RefillTable = ({ records, onStatusChange, onNoteChange }: RefillTableProps
                 {/* Received At */}
                 <TableCell className="px-4 py-3.5 text-sm text-muted-foreground whitespace-nowrap">
                   {new Date(record.createdAt).toLocaleTimeString([], {
+                    month: 'short', day: 'numeric',
                     hour: 'numeric', minute: '2-digit'
                   })}
                 </TableCell>
